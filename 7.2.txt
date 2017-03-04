@@ -1,0 +1,44 @@
+--------------------------------------------------------------------------------
+Section a) 
+
+Step 1: emp = LOAD 'employee_details.txt' USING PigStorage(',') AS (empid:int,emp_name:chararray,sal:int,rating:int);
+
+Step 2: sort_emp = ORDER emp by rating desc, emp_name;
+
+Step3: top_emp = LIMIT sort_emp 5;
+
+Step 4: dump top_emp;
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Section b)
+Step 1:  sal_sort_emp = ORDER emp by sal desc, emp_name;
+Step 2: fil_sort_emp = FILTER sal_sort_emp by empid%2==1;
+Step 3: lim_emp = LIMIT fil_sort_emp 3;
+Step 4: fin_emp = foreach lim_emp generate (empid, emp_name);
+
+---------------------------------------------------------------------------------------------------------------------------------------------------
+
+Section c)
+
+exp = LOAD 'employee_expenses.txt' USING PigStorage('\t') AS (empid:int, expense:int);
+join_exp = JOIN exp BY empid, emp BY empid using 'replicated';
+grp_emp = GROUP join_exp by empid;
+sum_exp = FOREACH grp_emp Generate group, SUM(join_exp.expense) as sum;
+sort_sum = ORDER sum_exp by sum desc;
+max_expense = LIMIT sort_sum 1;
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+Section d)
+join_emp_outer = JOIN emp by empid LEFT OUTER, exp by emp_id;
+fin_outer = foreach join_emp_outer generate empid,emp_name;
+unique = distinct fin_outer;
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+Section e)
+
+emp_new = foreach emp generate empid;
+exp_new = foreach exp generate emp_id;
+cogroup_data = cogroup emp_new by empid, exp_new by emp_id;
+sub_data = Foreach cogroup_data generate SUBTRACT(emp_new,exp_new);
